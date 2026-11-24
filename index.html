@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dhanvantari Care | Clinical Intake & EHR Portal</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <aside class="sidebar">
+        <div class="brand">
+            <div class="logo-dot"></div>
+            <div>
+                <h2>Dhanvantari Care</h2>
+                <span>Clinical Workflow Portal</span>
+            </div>
+        </div>
+        <nav>
+            <button class="nav-btn active" onclick="showPage('dashboard', this)">Clinical Dashboard</button>
+            <button class="nav-btn" onclick="showPage('intake', this)">Patient Intake</button>
+            <button class="nav-btn" onclick="showPage('consult', this)">Doctor Consultation</button>
+            <button class="nav-btn" onclick="showPage('records', this)">Patient EHR Directory</button>
+            <button class="nav-btn" onclick="showPage('catalog', this)">ICD-11 Code Lookup</button>
+        </nav>
+        <div class="sidebar-footer">
+            <button class="btn-outline" onclick="seedDemoData()">+ Load Sample Patients</button>
+        </div>
+    </aside>
+
+    <main class="content">
+        <div id="toast" class="toast">System Ready</div>
+
+        <!-- PAGE 1: DASHBOARD -->
+        <section id="page-dashboard" class="page active">
+            <header class="page-header">
+                <h1>Clinical Operations Overview</h1>
+                <p>Real-time outpatient intake, standardized ICD-11 coding, and care guidance.</p>
+            </header>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <span>Patients Waiting</span>
+                    <h3 id="stat-waiting">0</h3>
+                </div>
+                <div class="stat-card">
+                    <span>Consultations Completed</span>
+                    <h3 id="stat-completed">0</h3>
+                </div>
+                <div class="stat-card">
+                    <span>Active Clinical Protocols</span>
+                    <h3>6</h3>
+                </div>
+                <div class="stat-card">
+                    <span>Claim Readiness</span>
+                    <h3>100%</h3>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Recent Finalized Consultations</h3>
+                <div id="dashboard-recent" class="empty-state">No consultations completed yet. Register a patient or load sample data.</div>
+            </div>
+        </section>
+
+        <!-- PAGE 2: PATIENT INTAKE -->
+        <section id="page-intake" class="page">
+            <header class="page-header">
+                <h1>Outpatient Registration</h1>
+                <p>Add arriving patients to the consultation waiting list.</p>
+            </header>
+
+            <div class="card form-card">
+                <div class="form-grid">
+                    <div>
+                        <label>Full Name *</label>
+                        <input type="text" id="in-name" placeholder="e.g., Rohan Kulkarni">
+                    </div>
+                    <div>
+                        <label>National Health / ABHA ID</label>
+                        <input type="text" id="in-healthid" placeholder="e.g., 91-4820-1934-8821">
+                    </div>
+                    <div>
+                        <label>Clinical Department</label>
+                        <select id="in-dept">
+                            <option value="General Medicine">General Medicine</option>
+                            <option value="Orthopedics">Orthopedics</option>
+                            <option value="Pulmonology">Pulmonology</option>
+                            <option value="Endocrinology">Endocrinology</option>
+                            <option value="Rheumatology">Rheumatology</option>
+                            <option value="Neurology">Neurology</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>Primary Condition</label>
+                        <select id="in-condition">
+                            <option value="Acute Hyperacidity & Gastritis">Acute Hyperacidity & Gastritis</option>
+                            <option value="Chronic Osteoarthritis">Chronic Osteoarthritis</option>
+                            <option value="Bronchial Asthma & Wheezing">Bronchial Asthma & Wheezing</option>
+                            <option value="Type-2 Metabolic Diabetes">Type-2 Metabolic Diabetes</option>
+                            <option value="Inflammatory Joint Pain">Inflammatory Joint Pain</option>
+                            <option value="Migraine & Tension Headache">Migraine & Tension Headache</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>Patient Constitution Profile</label>
+                        <select id="in-profile">
+                            <option value="Type-P Profile">Type-P Profile</option>
+                            <option value="Type-V Profile">Type-V Profile</option>
+                            <option value="Type-K Profile">Type-K Profile</option>
+                            <option value="Type-PV Profile">Type-PV Profile</option>
+                        </select>
+                    </div>
+                </div>
+                <button class="btn-primary" onclick="handleRegister()">Register Patient</button>
+            </div>
+        </section>
+
+        <!-- PAGE 3: DOCTOR CONSULTATION -->
+        <section id="page-consult" class="page">
+            <header class="page-header flex-between">
+                <div>
+                    <h1>Doctor Consultation Desk</h1>
+                    <p>Process waiting patients, generate CarePopup prescriptions, and review records.</p>
+                </div>
+                <div class="btn-group">
+                    <button class="btn-primary" onclick="handleConsult()">Consult Next Patient</button>
+                    <button id="undo-btn" class="btn-danger" onclick="handleUndo()" disabled>Undo Last Entry</button>
+                </div>
+            </header>
+
+            <div class="card">
+                <h3>Current Waiting Room</h3>
+                <div id="waiting-list" class="empty-state">No patients currently waiting.</div>
+            </div>
+        </section>
+
+        <!-- PAGE 4: PATIENT EHR DIRECTORY -->
+        <section id="page-records" class="page">
+            <header class="page-header flex-between">
+                <div>
+                    <h1>Patient EHR & Insurance Directory</h1>
+                    <p>View finalized patient records, CarePopup guidance, and standardized claim sheets.</p>
+                </div>
+                <input type="text" id="ehr-search" class="search-input" placeholder="Search by patient name or ICD-11..." oninput="renderUI()">
+            </header>
+
+            <div id="records-list" class="records-grid"></div>
+        </section>
+
+        <!-- PAGE 5: ICD-11 LOOKUP -->
+        <section id="page-catalog" class="page">
+            <header class="page-header">
+                <h1>Standardized ICD-11 Terminology Directory</h1>
+                <p>Dual-coding reference mapping clinical conditions to WHO ICD-11 TM2 standards.</p>
+            </header>
+
+            <div class="card">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Department</th>
+                            <th>Condition</th>
+                            <th>Clinical Code</th>
+                            <th>WHO ICD-11 TM2</th>
+                            <th>Standard Protocol</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>General Medicine</td><td>Acute Hyperacidity & Gastritis</td><td><code>REF-GM-014</code></td><td><code>TM2-DA01.1</code></td><td>Antacid Herbal Compound + Cooling Diet</td></tr>
+                        <tr><td>Orthopedics</td><td>Chronic Osteoarthritis</td><td><code>REF-OR-089</code></td><td><code>TM2-FA20.0</code></td><td>Joint Support Resin Tabs + Sesame Oil</td></tr>
+                        <tr><td>Pulmonology</td><td>Bronchial Asthma & Wheezing</td><td><code>REF-PU-042</code></td><td><code>TM2-CA23.2</code></td><td>Herbal Expectorant + Steam Inhalation</td></tr>
+                        <tr><td>Endocrinology</td><td>Type-2 Metabolic Diabetes</td><td><code>REF-EN-102</code></td><td><code>TM2-5A11.0</code></td><td>Turmeric-Amla Extract + Low-GI Diet</td></tr>
+                        <tr><td>Rheumatology</td><td>Inflammatory Joint Pain</td><td><code>REF-RH-031</code></td><td><code>TM2-FA20.2</code></td><td>Ashwagandha Compound + Warm Fomentation</td></tr>
+                        <tr><td>Neurology</td><td>Migraine & Tension Headache</td><td><code>REF-NE-054</code></td><td><code>TM2-8A80.0</code></td><td>Neuro-Calming Tonic + Sleep Hygiene</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <!-- CAREPOPUP MODAL -->
+    <div id="care-modal" class="modal-backdrop" onclick="closeModal(event)">
+        <div class="modal-box" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <div>
+                    <span class="badge">CarePopup Clinical Decision Support</span>
+                    <h2 id="m-name">Patient Name</h2>
+                </div>
+                <button class="close-btn" onclick="document.getElementById('care-modal').style.display='none'">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="code-banner">
+                    <div><strong>Health ID:</strong> <span id="m-hid"></span></div>
+                    <div><strong>Local Code:</strong> <code id="m-local"></code></div>
+                    <div><strong>ICD-11 TM2:</strong> <code id="m-icd"></code></div>
+                </div>
+                <div class="detail-block">
+                    <h4>Prescribed Medication & Formulation</h4>
+                    <p id="m-med"></p>
+                </div>
+                <div class="detail-block">
+                    <h4>Dosage & Administration Timing</h4>
+                    <p id="m-timing"></p>
+                </div>
+                <div class="two-col">
+                    <div class="detail-block diet-good">
+                        <h4>Recommended Diet & Lifestyle</h4>
+                        <p id="m-diet"></p>
+                    </div>
+                    <div class="detail-block diet-bad">
+                        <h4>Contraindications & Restrictions</h4>
+                        <p id="m-rest"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="clinic_core.js"></script>
+    <script>
+        let regFn, consultFn, undoFn, fetchStateFn;
+        let clinicState = { queue: [], records: [], canUndo: false };
+
+        Module.onRuntimeInitialized = function() {
+            regFn        = Module.cwrap('register_patient', 'number', ['string', 'string', 'string', 'string', 'string']);
+            consultFn    = Module.cwrap('consult_next_patient', 'number', []);
+            undoFn       = Module.cwrap('undo_last_consultation', 'number', []);
+            fetchStateFn = Module.cwrap('fetch_clinic_state_json', 'string', []);
+            syncState();
+        };
+
+        function syncState() {
+            if (!fetchStateFn) return;
+            clinicState = JSON.parse(fetchStateFn());
+            renderUI();
+        }
+
+        function showPage(pageId, btn) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('page-' + pageId).classList.add('active');
+            btn.classList.add('active');
+        }
+
+        function notify(msg) {
+            const t = document.getElementById('toast');
+            t.innerText = msg;
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 3200);
+        }
+
+        function handleRegister() {
+            const name = document.getElementById('in-name').value.trim();
+            const hid  = document.getElementById('in-healthid').value.trim() || "ABHA-PENDING";
+            const dept = document.getElementById('in-dept').value;
+            const cond = document.getElementById('in-condition').value;
+            const prof = document.getElementById('in-profile').value;
+
+            if (!name) {
+                notify("Please enter the patient's full name.");
+                return;
+            }
+            const id = regFn(name, hid, dept, cond, prof);
+            document.getElementById('in-name').value = "";
+            document.getElementById('in-healthid').value = "";
+            notify("Registered " + name + " (Token #" + id + ")");
+            syncState();
+        }
+
+        function handleConsult() {
+            const id = consultFn();
+            if (id === -1) {
+                notify("No patients waiting in line.");
+                return;
+            }
+            syncState();
+            const latest = clinicState.records.find(r => r.id === id);
+            if (latest) openCarePopup(latest);
+            notify("Consultation finalized for Token #" + id);
+        }
+
+        function handleUndo() {
+            const id = undoFn();
+            if (id !== -1) {
+                notify("Reverted consultation record #" + id);
+                syncState();
+            }
+        }
+
+        function seedDemoData() {
+            regFn("Ananya Deshmukh", "91-3302-4491-1029", "General Medicine", "Acute Hyperacidity & Gastritis", "Type-P Profile");
+            regFn("Vikramaditya Rao", "91-7812-9043-5512", "Orthopedics", "Chronic Osteoarthritis", "Type-V Profile");
+            regFn("Meera Nair", "91-6190-2284-7730", "Pulmonology", "Bronchial Asthma & Wheezing", "Type-KV Profile");
+            notify("3 sample patients added to waiting room.");
+            syncState();
+        }
+
+        function openCarePopup(rec) {
+            document.getElementById('m-name').innerText = rec.name + " (#" + rec.id + ")";
+            document.getElementById('m-hid').innerText = rec.healthId;
+            document.getElementById('m-local').innerText = rec.localCode;
+            document.getElementById('m-icd').innerText = rec.icd11;
+            document.getElementById('m-med').innerText = rec.medication;
+            document.getElementById('m-timing').innerText = rec.timing;
+            document.getElementById('m-diet').innerText = rec.diet;
+            document.getElementById('m-rest').innerText = rec.restrictions;
+            document.getElementById('care-modal').style.display = 'flex';
+        }
+
+        function closeModal(e) {
+            if (e.target.id === 'care-modal') {
+                document.getElementById('care-modal').style.display = 'none';
+            }
+        }
+
+        function downloadClaim(rec) {
+            const text = [
+                "STANDARDIZED INSURANCE & EHR CLAIM SUMMARY",
+                "------------------------------------------",
+                "Patient Name : " + rec.name + " (ID #" + rec.id + ")",
+                "Health ID    : " + rec.healthId,
+                "Department   : " + rec.dept,
+                "Diagnosis    : " + rec.condition,
+                "Local Code   : " + rec.localCode,
+                "ICD-11 TM2   : " + rec.icd11,
+                "Medication   : " + rec.medication,
+                "Dosage Timing: " + rec.timing
+            ].join("\n");
+            const blob = new Blob([text], { type: "text/plain" });
+            const a = document.createElement("a");
+            a.href = URL.createObjectURL(blob);
+            a.download = "Claim_" + rec.id + "_" + rec.icd11 + ".txt";
+            a.click();
+        }
+
+        function renderUI() {
+            document.getElementById('stat-waiting').innerText = clinicState.queue.length;
+            document.getElementById('stat-completed').innerText = clinicState.records.length;
+            document.getElementById('undo-btn').disabled = !clinicState.canUndo;
+
+            const wDiv = document.getElementById('waiting-list');
+            if (clinicState.queue.length === 0) {
+                wDiv.innerHTML = '<div class="empty-state">No patients currently waiting.</div>';
+            } else {
+                wDiv.innerHTML = clinicState.queue.map((p, idx) => `
+                    <div class="list-row">
+                        <div>
+                            <strong>#${p.id} — ${p.name}</strong> <span class="tag">${p.dept}</span>
+                            <div class="sub">${p.condition} • Health ID: ${p.healthId}</div>
+                        </div>
+                        <span class="pos-badge">${idx === 0 ? 'Next in Line' : 'Waiting #' + (idx + 1)}</span>
+                    </div>
+                `).join('');
+            }
+
+            const dDiv = document.getElementById('dashboard-recent');
+            if (clinicState.records.length === 0) {
+                dDiv.innerHTML = '<div class="empty-state">No consultations completed yet.</div>';
+            } else {
+                dDiv.innerHTML = clinicState.records.slice(0, 4).map(r => `
+                    <div class="list-row">
+                        <div>
+                            <strong>${r.name}</strong> — ${r.condition}
+                            <div class="sub">ICD-11: ${r.icd11} | ${r.medication}</div>
+                        </div>
+                        <button class="btn-sm" onclick='openCarePopup(${JSON.stringify(r)})'>View CarePopup</button>
+                    </div>
+                `).join('');
+            }
+
+            const q = (document.getElementById('ehr-search').value || '').toLowerCase();
+            const filtered = clinicState.records.filter(r =>
+                r.name.toLowerCase().includes(q) || r.icd11.toLowerCase().includes(q) || r.condition.toLowerCase().includes(q)
+            );
+            const rDiv = document.getElementById('records-list');
+            if (filtered.length === 0) {
+                rDiv.innerHTML = '<div class="card empty-state">No matching patient records found.</div>';
+            } else {
+                rDiv.innerHTML = filtered.map(r => `
+                    <div class="card record-card">
+                        <div class="flex-between">
+                            <strong>#${r.id} • ${r.name}</strong>
+                            <code>${r.icd11}</code>
+                        </div>
+                        <p class="sub">${r.dept} — ${r.condition}</p>
+                        <p class="med-line">${r.medication}</p>
+                        <div class="btn-group">
+                            <button class="btn-sm" onclick='openCarePopup(${JSON.stringify(r)})'>Open CarePopup</button>
+                            <button class="btn-sm btn-outline" onclick='downloadClaim(${JSON.stringify(r)})'>Export Claim</button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+    </script>
+</body>
+</html>
