@@ -13,8 +13,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    - name: configure
-      run: ./configure
+    - name: Compile C code
+      run: gcc -Wall *.c -o program
     - name: make
       run: make
     - name: make check
